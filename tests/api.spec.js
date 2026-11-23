@@ -151,3 +151,17 @@ test("a saved status survives a fresh server process without reseeding the datab
   expect((await (await request.get("/api/bookings")).json()).total).toBe(before.total);
 });
 
+test("booking intake validates data and safely replays concurrent submissions", async ({ request, app }) => {
+  await signIn(request, app);
+  const headers = { "Idempotency-Key": crypto.randomUUID() };
+  const data = { devotee:"Booking Test", email:"booking@example.org", phone:"0000012345", puja:"Aarti",
+    temple:"Test Mandir", date:"2030-02-28", time:"18:30", amount:100 };
+  const post = value => request.post("/api/bookings", {headers, data:value});
+  expect((await post({...data, date:"2030-02-31"})).status()).toBe(400);
+  const responses = await Promise.all([post(data), post(data)]);
+  expect(responses.map(r => r.status()).sort()).toEqual([200,201]);
+  const [{id}, replay] = await Promise.all(responses.map(r => r.json()));
+  expect(replay.id).toBe(id);
+  expect((await post({...data, amount:200})).status()).toBe(409);
+  expect(await (await request.get("/api/bookings/"+id)).json()).toMatchObject({...data, status:"Pending"});
+});

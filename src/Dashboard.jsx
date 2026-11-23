@@ -1,3 +1,4 @@
+import NewBooking from './NewBooking.jsx'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AlertCircle, ArrowDownUp, ArrowRight, BookOpen, CalendarDays, CalendarRange,
@@ -53,7 +54,7 @@ function Toolbar({ search, setSearch, query, change, pujas }) {
   const filtersButton = useRef(null)
   const sortButton = useRef(null)
   const searchInput = useRef(null)
-  const filterCount = Number(Boolean(query.status)) + Number(Boolean(query.puja))
+  const filterCount = Number(Boolean(query.status)) + Number(Boolean(query.puja)) + Number(Boolean(query.date))
   useEffect(() => {
     if (!panel) return
     const outside = event => { if (!controls.current?.contains(event.target)) setPanel('') }
@@ -83,6 +84,7 @@ function Toolbar({ search, setSearch, query, change, pujas }) {
         <ListFilter size={16} />Filters{filterCount > 0 && <span className="db-filter-count">{filterCount}</span>}<ChevronDown size={13} />
       </button>
       {panel === 'filters' && <div className="db-popover" id="db-filters" role="group" aria-labelledby="db-filters-trigger">
+        <label>Ceremony date<input type="date" value={query.date || ''} onChange={event => change({ date: event.target.value })}/></label>
         <label>Filter by status<select value={query.status} onChange={event => change({ status: event.target.value })}><option value="">All statuses</option>{statuses.map(value => <option key={value}>{value}</option>)}</select></label>
         <label>Filter by puja<select value={query.puja} onChange={event => change({ puja: event.target.value })}><option value="">All pujas</option>{pujas.map(value => <option key={value}>{value}</option>)}</select></label>
       </div>}
@@ -122,6 +124,7 @@ export default function Dashboard({ onSignOut, user = 'Temple admin', onUnauthor
   const [settled, setSettled] = useState('')
   const [revision, setRevision] = useState(0)
   const [selected, setSelected] = useState(null)
+  const [creating, setCreating] = useState(false)
   const [mobileNav, setMobileNav] = useState(false)
   const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value !== '')).toString()
   const requestKey = params + '/' + revision
@@ -162,7 +165,7 @@ export default function Dashboard({ onSignOut, user = 'Temple admin', onUnauthor
 
   function selectStatus(status) {
     setSearch('')
-    change({ status, q: '', puja: '' })
+    change({ status, q: '', puja: '', date: '' })
     setMobileNav(false)
   }
   const nav = { status: query.status, selectStatus, user, onSignOut }
@@ -178,13 +181,13 @@ export default function Dashboard({ onSignOut, user = 'Temple admin', onUnauthor
         <span className="db-today"><CalendarDays size={15} />{todayFormat.format(new Date())}</span>
       </header>
       <main id="db-main" className="db-main" tabIndex={-1}>
-        <div className="db-page-heading"><h1>Puja bookings</h1><button className="db-refresh db-outline-button" aria-label="Refresh bookings" onClick={refresh} disabled={busy}><RotateCw size={15} className={busy ? 'db-spin' : ''} /><span>Refresh</span></button></div>
+        <div className="db-page-heading"><h1>Puja bookings</h1><div className="db-heading-actions"><button className="db-refresh db-outline-button" aria-label="Refresh bookings" onClick={refresh} disabled={busy}><RotateCw size={15} className={busy ? 'db-spin' : ''} /><span>Refresh</span></button><button className="db-primary-button" onClick={() => setCreating(true)}>New booking</button></div></div>
         <Overview summary={data?.summary} />
         <section className="db-register" aria-labelledby="db-register-title">
           <div className="db-register-head"><span className="db-register-icon"><ClipboardList size={19} /></span><h2 id="db-register-title" tabIndex={-1}>Booking register</h2>{data && <span className="db-register-count">{data.total}</span>}</div>
           <Toolbar search={search} setSearch={setSearch} query={query} change={change} pujas={data?.pujas || []} />
-          {(query.status || query.puja) && <div className="db-applied">
-            {['status', 'puja'].filter(key => query[key]).map(key => <button key={key} onClick={() => change({ [key]: '' })} aria-label={'Remove ' + query[key] + ' filter'}>{query[key]}<X size={13} /></button>)}
+          {(query.status || query.puja || query.date) && <div className="db-applied">
+            {['status', 'puja', 'date'].filter(key => query[key]).map(key => <button key={key} onClick={() => change({ [key]: '' })} aria-label={'Remove ' + query[key] + ' filter'}>{query[key]}<X size={13} /></button>)}
           </div>}
           {error ? <div className="db-state"><AlertCircle size={24} /><h3>Couldn’t load bookings</h3><p role="alert">{error}</p><button className="db-outline-button" onClick={refresh}>Retry</button></div>
           : !data ? <div className="db-state" role="status"><LoaderCircle className="db-spin" size={23} /><p>Loading bookings…</p></div>
@@ -198,6 +201,12 @@ export default function Dashboard({ onSignOut, user = 'Temple admin', onUnauthor
         </section>
       </main>
     </div>
+    {creating && <NewBooking pujas={data?.pujas || []} onClose={() => setCreating(false)} onUnauthorized={onUnauthorized} onCreated={id => {
+      setCreating(false)
+      setSearch(id)
+      setQuery({ ...initialQuery, q: id })
+      setSelected(id)
+    }} />}
     {selected && <BookingDetails key={selected} id={selected} onClose={() => setSelected(null)} onSaved={refresh} onUnauthorized={onUnauthorized} />}
   </div>
 }

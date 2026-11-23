@@ -181,3 +181,24 @@ test("a reviewer link opens a working dashboard and keeps the reviewer's changes
   await expect(drawer(page).getByText(sample.status + " → " + next)).toBeVisible();
   await expect(drawer(page).getByText(/Demo reviewer ·/)).toBeVisible();
 });
+test("an administrator creates a booking on mobile and finds it by ceremony date", async ({ page, app }) => {
+  await page.setViewportSize({width: 390, height: 844});
+  await openDashboard(page, app);
+  await page.getByRole("button", {name:"New booking"}).click();
+  const form = page.getByRole("dialog", {name:"New booking"});
+  for (const [label, value] of Object.entries({
+    "Devotee name":"Intake Test", Email:"intake@example.org", Phone:"+91 00000 12345",
+    Puja:"Evening Aarti", Temple:"Test Mandir", "Ceremony date":"2031-04-19",
+    "Time (IST)":"18:30", "Amount (₹)":"1200",
+  })) await form.getByLabel(label, {exact:true}).fill(value);
+  await form.getByRole("button", {name:"Create booking"}).click();
+  await expect(drawer(page).getByText("Intake Test")).toBeVisible();
+  await expect(drawer(page).getByLabel("Booking status")).toHaveValue("Pending");
+  await page.reload();
+  await page.getByRole("button",{name:"Filters",exact:true}).click();
+  await page.getByLabel("Ceremony date").fill("2031-04-19");
+  await page.keyboard.press("Escape");
+  await expect(rowButtons(page)).toHaveCount(1);
+  await rowButtons(page).first().click();
+  await expect(drawer(page).getByText("Evening Aarti",{exact:true})).toBeVisible();
+});

@@ -282,3 +282,10 @@ body:has(.db-panel[open]) { overflow: hidden; }
 .db-history li { position: relative; margin-bottom: 14px; }
 .db-history li::before { content: ''; position: absolute; left: -19px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: #53725b; }
 .db-history small { display: block; color: var(--db-muted); margin-top: 3px; }
+.db-heading-actions { display:flex; align-items:center; gap:8px; }
+.db-heading-actions .db-primary-button { margin:0; }
+.db-intake fieldset { border:0; margin:20px 0; padding:0; display:grid; gap:10px; }
+.db-intake legend { font:22px var(--serif); margin-bottom:12px; }
+.db-intake label { display:grid; gap:4px; font-weight:550; }
+.db-intake input,.db-popover input[type=date] { box-sizing:border-box; min-width:0; width:100%; padding:9px; border:1px solid #bdcbbb; border-radius:6px; background:white; color:var(--db-ink); font:inherit; }
+@media(max-width:480px){.db-page-heading { flex-wrap:wrap; } }

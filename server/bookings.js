@@ -1,3 +1,4 @@
+import { createBooking, validDate } from './create-booking.js';
 import { Router } from 'express';
 
 const statusKeys = new Map([
@@ -7,7 +8,7 @@ const statusKeys = new Map([
   ['Completed', 'completed'],
 ]);
 const sortFields = ['date', 'amount', 'devotee', 'id'];
-const queryFields = ['q', 'status', 'puja', 'sort', 'order', 'page', 'pageSize'];
+const queryFields = ['q', 'status', 'puja', 'sort', 'order', 'page', 'pageSize', 'date'];
 const projection = {
   _id: 0, id: 1, devotee: 1, email: 1, phone: 1, puja: 1, temple: 1,
   date: 1, time: 1, amount: 1, status: 1, version: 1,
@@ -40,6 +41,10 @@ function parseQuery(query) {
     throw new QueryError('Specify a supported sort field and order.');
   }
   const filter = {};
+  if (query.date) {
+    if (!validDate(query.date)) throw new QueryError('Choose a valid ceremony date.');
+    filter.date = query.date;
+  }
   if (query.status) {
     if (!statusKeys.has(query.status)) throw new QueryError('Unknown booking status.');
     filter.status = query.status;
@@ -110,6 +115,7 @@ export function createBookingsRouter(db) {
     res.json({ items, total, page, pageSize, ...overview });
   });
 
+  router.post('/', (req, res) => createBooking(req, res, db));
   const detailProjection = { ...projection, history: 1 };
   router.get('/:id', async (req, res) => {
     const { bookings, scope } = res.locals;

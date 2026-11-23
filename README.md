@@ -19,6 +19,10 @@ npm run demo
 
 Open http://127.0.0.1:3000. This loopback-only demo uses the dedicated database `aaradhya_setu_local_demo`. Running it again preserves changes. Use `npm run dev` for hot reloading.
 
+## Booking intake
+
+Sign in as an administrator and select **New booking** to enter the devotee, contact information, puja, temple, ceremony date, IST time and amount. Submission opens the persisted Pending booking and selects it in the register. Filter by ceremony date to plan a day. The public reviewer link supports the same workflow with session-scoped fictional records. Use fictional contact details in that workspace.
+
 ## How the application works
 
 React renders the table, status overview and details drawer. Express validates filters and applies sorting and pagination in MongoDB. An ID tie-breaker keeps equally priced or dated bookings in a consistent order. Currency values are stored as whole rupees and ceremony dates as calendar dates.
@@ -29,6 +33,7 @@ The details drawer sends the version it originally read with each status update.
 | --- | --- |
 | GET /api/health | Check application and database availability |
 | GET, POST, DELETE /api/session | Inspect session, sign in or enter the reviewer demo, sign out |
+| POST /api/bookings | Create a pending booking. Send a UUID in the Idempotency-Key header to retry safely. |
 | GET /api/bookings | Read a filtered page, status totals and available pujas |
 | GET /api/bookings/:id | Read booking, ceremony and devotee details |
 | PATCH /api/bookings/:id | Save a status with its current version |
