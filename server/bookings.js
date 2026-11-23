@@ -26,7 +26,9 @@ function readPageNumber(value, fallback, maximum, name) {
 
 function parseQuery(query) {
   for (const [key, value] of Object.entries(query)) {
-    if (!queryFields.includes(key) || typeof value !== 'string') {
+    // Hosting rewrites can add route metadata alongside the public parameters.
+    if (!queryFields.includes(key)) continue;
+    if (typeof value !== 'string') {
       throw new QueryError('Each supported query parameter may appear once.');
     }
     if (value.length > 120 || /\p{Cc}/u.test(value)) {
@@ -143,3 +145,4 @@ export function createBookingsRouter(db) {
   });
   return router;
 }
+
