@@ -178,4 +178,6 @@ test("a reviewer link opens a working dashboard and keeps the reviewer's changes
   await page.reload();
   await button.click();
   await expect(select).toHaveValue(next);
+  await expect(drawer(page).getByText(sample.status + " → " + next)).toBeVisible();
+  await expect(drawer(page).getByText(/Demo reviewer ·/)).toBeVisible();
 });

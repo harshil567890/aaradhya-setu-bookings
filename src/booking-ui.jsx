@@ -88,6 +88,10 @@ function DetailField({ icon: Icon, label, children }) {
   return <div className="db-detail-field"><Icon size={17} aria-hidden="true" /><div><dt>{label}</dt><dd>{children}</dd></div></div>
 }
 
+const historyTime = new Intl.DateTimeFormat('en-IN', {
+  dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata',
+})
+
 export function BookingDetails({ id, onClose, onSaved, onUnauthorized }) {
   const [booking, setBooking] = useState(null)
   const [status, setStatus] = useState('')
@@ -168,6 +172,12 @@ export function BookingDetails({ id, onClose, onSaved, onUnauthorized }) {
           </button>
           {notice && <p className="db-success" role="status"><Check size={16} />{notice}</p>}
         </form>
+        <section className="db-detail-section"><h3>Status history</h3>
+          {booking.history?.length ? <ol className="db-history">{booking.history.slice().reverse().map((entry, index) =>
+            <li key={booking.version - index}><strong>{entry.from} → {entry.to}</strong>
+              <small>{entry.actor} · <time dateTime={entry.at}>{historyTime.format(new Date(entry.at))} IST</time></small>
+            </li>)}</ol> : <p>No status changes recorded yet.</p>}
+        </section>
       </>}
     </div>
   </Panel>

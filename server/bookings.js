@@ -110,9 +110,10 @@ export function createBookingsRouter(db) {
     res.json({ items, total, page, pageSize, ...overview });
   });
 
+  const detailProjection = { ...projection, history: 1 };
   router.get('/:id', async (req, res) => {
     const { bookings, scope } = res.locals;
-    const booking = await bookings.findOne({ ...scope, id: req.params.id }, { projection });
+    const booking = await bookings.findOne({ ...scope, id: req.params.id }, { projection: detailProjection });
     if (!booking) return res.status(404).json({ error: 'Booking not found.' });
     res.json(booking);
   });
@@ -132,11 +133,17 @@ export function createBookingsRouter(db) {
 
     // Checking the displayed version in the write itself prevents lost updates.
     // Re-selecting the current status leaves the document version unchanged.
-    const nextVersion = { $cond: [{ $eq: ['$status', status] }, '$version', { $add: ['$version', 1] }] };
+    const sameStatus = { $eq: ['$status', status] };
+    const previousHistory = { $ifNull: ['$history', []] };
+    const entry = { from: '$status', to: status, at: '$$NOW', actor: { $literal: req.session.user } };
     const updated = await bookings.findOneAndUpdate(
       { ...scope, id: req.params.id, version },
-      [{ $set: { status, version: nextVersion } }],
-      { returnDocument: 'after', includeResultMetadata: false, projection },
+      [{ $set: {
+        status,
+        version: { $cond: [sameStatus, '$version', { $add: ['$version', 1] }] },
+        history: { $cond: [sameStatus, previousHistory, { $slice: [{ $concatArrays: [previousHistory, [entry]] }, -20] }] },
+      } }],
+      { returnDocument: 'after', includeResultMetadata: false, projection: detailProjection },
     );
     if (updated) return res.json(updated);
     const exists = await bookings.findOne({ ...scope, id: req.params.id }, { projection: { _id: 1 } });

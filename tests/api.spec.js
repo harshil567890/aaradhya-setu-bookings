@@ -38,7 +38,9 @@ test("two review sessions can edit independently without changing the administra
     const read = await (await firstReviewer.get(path)).json();
     expect(read).toMatchObject({ status: next, version: sample.version + 1 });
     const filtered = await (await firstReviewer.get("/api/bookings", { params: { q: sample.id, status: next } })).json();
-    expect(filtered.items).toEqual([read]);
+    const { history, ...listItem } = read;
+    expect(history).toEqual([{ from: sample.status, to: next, actor: "Demo reviewer", at: expect.any(String) }]);
+    expect(filtered.items).toEqual([listItem]);
     expect(await (await secondReviewer.get(path)).json()).toEqual(secondBefore);
     expect(await (await request.get(path)).json()).toEqual(adminBefore);
   } finally {
@@ -148,3 +150,4 @@ test("a saved status survives a fresh server process without reseeding the datab
   });
   expect((await (await request.get("/api/bookings")).json()).total).toBe(before.total);
 });
+

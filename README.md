@@ -23,7 +23,7 @@ Open http://127.0.0.1:3000. This loopback-only demo uses the dedicated database 
 
 React renders the table, status overview and details drawer. Express validates filters and applies sorting and pagination in MongoDB. An ID tie-breaker keeps equally priced or dated bookings in a consistent order. Currency values are stored as whole rupees and ceremony dates as calendar dates.
 
-The details drawer sends the version it originally read with each status update. MongoDB matches that version in the atomic write. A competing edit receives HTTP 409 and the drawer loads the latest booking before the user retries.
+The details drawer sends the version it originally read with each status update. MongoDB matches that version in the atomic write. The same write records the previous status, new status, account label and server timestamp. The drawer shows the latest 20 changes in Indian Standard Time. A competing edit receives HTTP 409 and the drawer loads the latest booking before the user retries.
 
 | Endpoint | Purpose |
 | --- | --- |

@@ -277,3 +277,8 @@ body:has(.db-panel[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .db-shell *, .db-shell *::before, .db-shell *::after { scroll-behavior: auto !important; transition-duration: 0s !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+.db-history { list-style: none; padding: 0 0 0 14px; margin: 12px 0 0 3px; border-left: 2px solid #d6e1d3; }
+.db-history li { position: relative; margin-bottom: 14px; }
+.db-history li::before { content: ''; position: absolute; left: -19px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: #53725b; }
+.db-history small { display: block; color: var(--db-muted); margin-top: 3px; }
